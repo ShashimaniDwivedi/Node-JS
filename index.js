@@ -1,9 +1,12 @@
 const fs = require("fs");
 const http = require("http");
 const url = require("url");
+const slugify = require("slugify");
+const replaceTemplate = require("./modules/replaceTemplate");
 
 const hello = "Hello World";
 console.log(hello);
+//slug is a last part of url that contain unique string
 //************BLOCKING SYNCHRONOUS WAY******* */
 // const txtIn = fs.readFileSync(
 // 	"C:UsersManasDesktopNode JS\1-node-farmstarter\txtinput.txt",
@@ -58,20 +61,6 @@ console.log(hello);
 /////////////////////////////////
 //Creating Simple Server
 
-const replaceTemplate = (temp, product) => {
-	let output = temp.replace(/{%PRODUCTNAME%}/g, product.productName);
-	output = output.replace(/{%IMAGE%}/g, product.image);
-	output = output.replace(/{%PRICE%}/g, product.price);
-	output = output.replace(/{%FROM%}/g, product.from);
-	output = output.replace(/{%QUANTITY%}/g, product.quantity);
-	output = output.replace(/{%DESCRIPTION%}/g, product.description);
-	output = output.replace(/{%ID%}/g, product.id);
-	if (!product.organic) {
-		output = output.replace(/{%NOT_ORGANIC%}/g, "not-organic");
-	}
-	return output;
-};
-
 const tempOverview = fs.readFileSync(
 	"C:/Users/Manas/Desktop/Node JS/1-node-farm/starter/templates/template-overview.html",
 	"utf-8"
@@ -90,7 +79,9 @@ const data = fs.readFileSync(
 );
 
 const dataObj = JSON.parse(data);
-
+//The slugify package is used to convert strings into URL-friendly slugs by replacing spaces and special characters with hyphens or underscores.
+const slugs = dataObj.map((el) => slugify(el.productName, { lower: true }));
+console.log(slugs);
 const server = http.createServer((req, res) => {
 	// console.log(req.url);
 	const { query, pathname } = url.parse(req.url, true);
