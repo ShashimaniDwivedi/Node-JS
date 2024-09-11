@@ -1,0 +1,126 @@
+const fs = require("fs");
+const http = require("http");
+const url = require("url");
+const slugify = require("slugify");
+const replaceTemplate = require("./modules/replaceTemplate");
+
+const hello = "Hello World";
+console.log(hello);
+//slug is a last part of url that contain unique string
+//************BLOCKING SYNCHRONOUS WAY******* */
+// const txtIn = fs.readFileSync(
+// 	"C:UsersManasDesktopNode JS\1-node-farmstarter\txtinput.txt",
+// 	"utf-8"
+// );
+// console.log(txtIn);
+
+// const txtIn = fs.readFileSync(
+// 	"C:/Users/Manas/Desktop/Node JS/1-node-farm/starter/txt/input.txt",
+// 	"utf-8"
+// );
+// console.log(txtIn);
+// const txtOut = `This is what we know about the avocado ${txtIn}.\n Created on ${Date.now()}`;
+
+// fs.writeFileSync(
+// 	"C:/Users/Manas/Desktop/Node JS/1-node-farm/starter/txt/input.txt",
+// 	txtOut
+// );
+// console.log("File Written");
+
+//in Asynchronous way
+
+/* fs.readFile(
+	"C:/Users/Manas/Desktop/Node JS/1-node-farm/starter/txt/start.txt",
+	"utf-8",
+	(err, data1) => {
+		fs.readFile(
+			`C:/Users/Manas/Desktop/Node JS/1-node-farm/starter/txt/${data1}.txt`,
+			"utf-8",
+			(err, data2) => {
+				if (err) return console.log("Error");
+				console.log(data2);
+				fs.readFile(
+					"C:/Users/Manas/Desktop/Node JS/1-node-farm/starter/txt/append.txt",
+					"utf-8",
+					(err, data3) => {
+						console.log(data3);
+						fs.writeFile(
+							"C:/Users/Manas/Desktop/Node JS/1-node-farm/starter/txt/final.txt",
+							`${data2}\n${data3}`,
+							"utf-8",
+							(err) => {
+								console.log("Your file has been written");
+							}
+						);
+					}
+				);
+			}
+		);
+	}
+); */
+/////////////////////////////////
+//Creating Simple Server
+
+const tempOverview = fs.readFileSync(
+	"C:/Users/Manas/Desktop/Node JS/1-node-farm/starter/templates/template-overview.html",
+	"utf-8"
+);
+const tempProduct = fs.readFileSync(
+	"C:/Users/Manas/Desktop/Node JS/1-node-farm/starter/templates/template-product.html",
+	"utf-8"
+);
+const tempCard = fs.readFileSync(
+	"C:/Users/Manas/Desktop/Node JS/1-node-farm/starter/templates/template-card.html",
+	"utf-8"
+);
+const data = fs.readFileSync(
+	"C:/Users/Manas/Desktop/Node JS/1-node-farm/starter/dev-data/data.json",
+	"utf-8"
+);
+
+const dataObj = JSON.parse(data);
+//The slugify package is used to convert strings into URL-friendly slugs by replacing spaces and special characters with hyphens or underscores.
+const slugs = dataObj.map((el) => slugify(el.productName, { lower: true }));
+console.log(slugs);
+const server = http.createServer((req, res) => {
+	// console.log(req.url);
+	const { query, pathname } = url.parse(req.url, true);
+	// const pathName = req.url;
+	console.log(req.url);
+	console.log(url.parse(req.url, true));
+	//overview page
+	if (pathname === "/" || pathname === "/overview") {
+		res.writeHead(200, {
+			"Content-type": "text/html",
+		});
+		const cardsHtml = dataObj.map((el) => replaceTemplate(tempCard, el)).join();
+
+		const output = tempOverview.replace(/{%PRODUCT_CARDS%}/g, cardsHtml);
+
+		res.end(output);
+	} else if (pathname === "/product") {
+		const product = dataObj[query.id];
+
+		const output = replaceTemplate(tempProduct, product);
+
+		res.end(output);
+	} else if (pathname === "/api") {
+		res.writeHead(200, { "Content-type": "application/json" });
+		res.end(data);
+	} else {
+		res.writeHead(404, {
+			"Content-type": "text/html",
+			"my-own-header": "hello-world",
+		});
+		res.end("<h1>Page not found</h1>");
+	}
+});
+
+////////////////////////////////
+//listening request
+server.listen(8000, "127.0.0.1", () => {
+	console.log("Server is listening on port 8000");
+});
+//Routing means Implementing diffrent action for different url
+//Creating Single API
+//API=>It is a request with which we can request some data
